@@ -1,0 +1,7 @@
+dogMeat:
+  config:
+    servlet:
+      name: defaultServlet
+      class: http.servlet.DefaultServlet
+      context:
+        myParam : hi Context!
