@@ -1,5 +1,22 @@
 dogMeat:
   config:
+    resolver:
+      freemarkerExtension:
+        - ftl
+        - api
+      imageFileExtension:
+        - jpg
+        - jpeg
+        - png
+        - gif
+        - svg
+        - webp
+        - ico
+        - bmp
+        - tiff
+        - tif
+        - jp2
+        - j2k
     servlet:
       name: defaultServlet
       class: http.servlet.DefaultServlet

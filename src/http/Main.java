@@ -1,5 +1,6 @@
 package http;
 
+import http.resolver.ResolverMaster;
 import http.server.HttpServer;
 import http.servlet.DefaultServlet;
 import org.yaml.snakeyaml.Loader;
@@ -12,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -35,30 +37,15 @@ public class Main {
             servletName = (String) servlet.getOrDefault("name", "basicServlet");
             servletContext = (Map<String, String>) servlet.getOrDefault("context", new HashMap<>());
 
+            Map<String, Object> o = (Map<String, Object>) config.get("resolver");
+            List<String> freemarkerExtensionList = (List<String>) o.get("freemarkerExtension");
+            List<String> imageFileExtensionList = (List<String>) o.get("imageFileExtension");
+
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        Servlet servletClass;
-        try {
-            Class<?> loadClass = Class.forName(servletClassName);
-            servletClass = (Servlet) loadClass.newInstance();
-
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-
-        System.out.println(servletClass.getClass().getName());
-        System.out.println("servletClassName = " + servletClassName);
-        System.out.println("servletName = " + servletName);
-        for (Map.Entry<String, String> stringStringEntry : servletContext.entrySet()) {
-            System.out.println("stringStringEntry = " + stringStringEntry.getKey() + " : " + stringStringEntry.getValue());
-        }
 
         HttpServer httpServer = new HttpServer();
         httpServer.start();

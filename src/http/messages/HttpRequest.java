@@ -1,18 +1,17 @@
-package http.dto;
+package http.messages;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HttpRequest {
+public class HttpRequest extends HttpProtocol{
 
-    private HttpMethod method;
-    private String path;
-    private String httpVersion;
-    private Map<String, String> headers;
-    private Map<String, String> cookies;
-    private String body;
+    // HttpProtocol Has this field
+    //    protected HttpMethod method;
+    //    protected String path;
+    //    protected String httpVersion;
+    //    protected Map<String, String> headers;
+    //    protected Map<String, String> cookies;
+    //    protected String body;
 
     @Override
     public String toString() {

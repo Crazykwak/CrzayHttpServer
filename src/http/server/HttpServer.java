@@ -2,6 +2,8 @@ package http.server;
 
 import http.config.Configuration;
 import http.handler.ReadHandler;
+import http.resolver.FreemarkerResolver;
+import http.resolver.ResolverMaster;
 import http.servlet.DefaultServlet;
 import http.util.HttpUtils;
 
@@ -78,7 +80,7 @@ public class HttpServer extends Thread{
     }
 
     private void readableHandle(SelectionKey key) throws IOException {
-        readHandlerPool.execute(new ReadHandler(key));
+        readHandlerPool.execute(new ReadHandler(key, ResolverMaster.getInstance()));
     }
 
     private void acceptableHandle(SelectionKey key) throws IOException {

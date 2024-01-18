@@ -1,4 +1,4 @@
-package http.dto;
+package http.messages;
 
 public enum HttpMethod {
 
