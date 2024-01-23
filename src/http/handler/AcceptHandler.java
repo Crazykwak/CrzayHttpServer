@@ -17,15 +17,17 @@ public class AcceptHandler implements Handler {
     @Override
     public void handle() {
 
-        try {
-            SocketChannel socketChannel = serverSocketChannel.accept();
-            if (socketChannel != null) {
-                new SocketHandler(selector, socketChannel);
+        synchronized (serverSocketChannel) {
+
+            try {
+                SocketChannel socketChannel = serverSocketChannel.accept();
+                if (socketChannel != null) {
+                    new SocketHandler(selector, socketChannel);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-
     }
 }
