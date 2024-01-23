@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
+@Deprecated
 public class ReadHandler implements Runnable {
 
     private SelectionKey key;
@@ -35,14 +36,22 @@ public class ReadHandler implements Runnable {
         HttpRequest httpRequest = null;
 
         try {
-            if (!client.isOpen()) {
-                return;
-            }
+            synchronized (client) {
+                if (!client.isOpen()) {
+                    System.out.println("client is already closed");
+                    return;
+                }
 
-            httpRequest = getHttpRequest(client);
+                httpRequest = getHttpRequest(client);
 
-            if (httpRequest != null) {
-                handleHttpRequest(httpRequest, client);
+                if (httpRequest != null) {
+                    System.out.println("httpRequest = " + httpRequest.toString());
+
+                    if (httpRequest.getPath().contains("favicon")) {
+                        favicon(httpRequest, client);
+                    }
+                    handleHttpRequest(httpRequest, client);
+                }
             }
 
         } catch (Exception e) {
@@ -52,8 +61,33 @@ public class ReadHandler implements Runnable {
 
     }
 
-    private HttpRequest getHttpRequest(SocketChannel client) throws IOException {
-        int byteRead = client.read(buffer);
+    private void favicon(HttpRequest httpRequest, SocketChannel client) throws IOException {
+        String path = httpRequest.getPath().toLowerCase();
+        Resolver resolver = resolverMaster.getResolver(path);
+        byte[] bodyByte = resolver.handle(httpRequest);
+
+        String httpResponse = "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: image/png\r\n" +
+                "Content-Length: " + bodyByte.length + "\r\n" +
+                "\r\n";
+
+        // 전송
+        sendResponse(httpRequest, client, httpResponse);
+        sendResponseBody(httpRequest, client, bodyByte);
+    }
+
+    private HttpRequest getHttpRequest(SocketChannel client) {
+        int byteRead = 0;
+
+        try {
+            if (!client.isOpen()) {
+                return null;
+            }
+            byteRead = client.read(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
         HttpRequest httpRequest = null;
 
         if (byteRead == -1) {
@@ -90,14 +124,31 @@ public class ReadHandler implements Runnable {
 
     private void sendResponse(HttpRequest httpRequest, SocketChannel client, String httpResponse) throws IOException {
         ByteBuffer responseBuffer = ByteBuffer.wrap(httpResponse.getBytes());
+
         while (responseBuffer.hasRemaining()) {
             client.write(responseBuffer);
         }
+
         // Keep the connection alive for HTTP/1.1 (optional)
         if (!httpRequest.isConnectionOptionIsClose()) {
             key.interestOps(SelectionKey.OP_READ);
         } else {
-            client.close();
+            HttpUtils.closeSocket(client);
+        }
+    }
+
+    private void sendResponseBody(HttpRequest httpRequest, SocketChannel client, byte[] body) throws IOException {
+        ByteBuffer responseBuffer = ByteBuffer.wrap(body);
+
+        while (responseBuffer.hasRemaining()) {
+            client.write(responseBuffer);
+        }
+
+        // Keep the connection alive for HTTP/1.1 (optional)
+        if (!httpRequest.isConnectionOptionIsClose()) {
+            key.interestOps(SelectionKey.OP_READ);
+        } else {
+            HttpUtils.closeSocket(client);
         }
     }
 

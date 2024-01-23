@@ -19,6 +19,12 @@ import java.util.Map;
 
 public class Main {
 
+    private static String logo =
+            "  ___  ____    __    ____  _  _    _   _  ____  ____  ____    ___  ____  ____  _  _  ____  ____ \n" +
+            " / __)(  _ \\  /__\\  (_   )( \\/ )  ( )_( )(_  _)(_  _)(  _ \\  / __)( ___)(  _ \\( \\/ )( ___)(  _ \\\n" +
+            "( (__  )   / /(__)\\  / /_  \\  /    ) _ (   )(    )(   )___/  \\__ \\ )__)  )   / \\  /  )__)  )   /\n" +
+            " \\___)(_)\\_)(__)(__)(____) (__)   (_) (_) (__)  (__) (__)    (___/(____)(_)\\_)  \\/  (____)(_)\\_)";
+
 
     public static void main(String[] args) {
 
@@ -28,7 +34,6 @@ public class Main {
 
         try {
             Map<String, Object> load = (Map<String, Object>) new Yaml().load(new FileReader("config/servlet.yml"));
-            System.out.println("load = " + load.toString());
             Map<String, Object> dogMeat = (Map<String, Object>) load.get("dogMeat");
             Map<String, Object> config = (Map<String, Object>) dogMeat.get("config");
             Map<String, Object> servlet = (Map<String, Object>) config.get("servlet");
@@ -50,6 +55,14 @@ public class Main {
         HttpServer httpServer = new HttpServer();
         httpServer.start();
 
+        printLog();
+
+
+    }
+
+    private static void printLog() {
+
+        System.out.println(logo);
 
     }
 

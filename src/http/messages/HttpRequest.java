@@ -3,24 +3,25 @@ package http.messages;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HttpRequest extends HttpProtocol{
-
-    // HttpProtocol Has this field
-    //    protected HttpMethod method;
-    //    protected String path;
-    //    protected String httpVersion;
-    //    protected Map<String, String> headers;
-    //    protected Map<String, String> cookies;
-    //    protected String body;
+public class HttpRequest {
+    private HttpMethod method;
+    private String path;
+    private String httpVersion;
+    private Map<String, String> headers;
+    private Map<String, String> cookies;
+    private String body;
 
     @Override
     public String toString() {
-        return "method : " + method +
-                "\npath : " + path +
-                "\nhttpVersion : " + httpVersion +
-                "\nheaders : " + headers.toString() +
-                "\ncookies : " + cookies.toString() +
-                "\nbody : " + body;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("method : ").append(method)
+                .append("\npath : ").append(path)
+                .append("\nhttpVersion : ").append(httpVersion)
+                .append("\nheaders : ").append(headers != null ? headers.toString() : "null")
+                .append("\ncookies : ").append(cookies != null ? cookies.toString() : "null")
+                .append("\nbody : ").append(body != null ? body : "null");
+
+        return stringBuilder.toString();
     }
 
     // private 생성자로 외부에서 직접 객체 생성을 막고, 빌더를 통해 생성하도록 합니다.
