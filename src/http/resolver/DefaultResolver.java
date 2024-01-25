@@ -4,6 +4,7 @@ import http.config.HttpConfig;
 import http.messages.HttpRequest;
 import http.messages.HttpResponse;
 import http.messages.HttpStatus;
+import http.util.HttpUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,8 +42,8 @@ public class DefaultResolver implements Resolver {
 
         try {
             byte[] body = Files.readAllBytes(targetFile.toPath());
-            String contentType = determineContentType(targetFile);
-            Map<String, String> headers = makeHeader(body.length, contentType);
+            String contentType = HttpUtils.determineContentType(targetFile);
+            Map<String, String> headers = HttpUtils.makeHeader(body.length, contentType);
 
             // 응답 헤더 설정
             HttpResponse httpResponse = new HttpResponse.Builder()
@@ -58,13 +59,7 @@ public class DefaultResolver implements Resolver {
         }
     }
 
-    private Map<String, String> makeHeader(int length, String contentType) {
-        Map<String, String> headers = new HashMap<>();
-        headers.put("Content-Length", String.valueOf(length));
-        headers.put("Content-Type", contentType);
 
-        return headers;
-    }
 
     private File findTargetFile(String path) {
 
@@ -73,40 +68,20 @@ public class DefaultResolver implements Resolver {
         return targetFile;
     }
 
-    private String determineContentType(File file) {
-        // 파일 확장자를 기반으로 Content-Type을 결정
-        String fileName = file.getName();
-        String extension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
-
-        switch (extension) {
-            case "html":
-                return "text/html; charset=" + Charset.defaultCharset().name();
-            case "css":
-                return "text/css; charset=" + Charset.defaultCharset().name();
-            case "js":
-                return "application/javascript; charset=" + Charset.defaultCharset().name();
-            case "png":
-                return "image/png";
-            case "jpg":
-            case "jpeg":
-                return "image/jpeg";
-            case "gif":
-                return "image/gif";
-            default:
-                return "application/octet-stream";
-        }
-    }
-
     private HttpResponse createNotFoundResponse() {
-        byte[] bytes = new byte[0];
+        byte[] body = new byte[0];
+        Map<String, String> headers;
         try {
-            bytes = Files.readAllBytes(notFound.toPath());
+            body = Files.readAllBytes(notFound.toPath());
+            String contentType = HttpUtils.determineContentType(notFound);
+            headers = HttpUtils.makeHeader(body.length, contentType);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return new HttpResponse.Builder()
                 .setStatus(HttpStatus.NOT_FOUND)
-                .setBody(bytes)  // 빈 바디 설정
+                .setHeaders(headers)
+                .setBody(body)  // 빈 바디 설정
                 .build();
     }
 }

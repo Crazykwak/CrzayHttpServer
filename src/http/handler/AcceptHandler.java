@@ -15,7 +15,7 @@ public class AcceptHandler implements Handler {
     }
 
     @Override
-    public void handle() {
+    public synchronized void handle() {
 
         synchronized (serverSocketChannel) {
 

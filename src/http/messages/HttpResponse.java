@@ -1,5 +1,7 @@
 package http.messages;
 
+import java.io.File;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +14,7 @@ public class HttpResponse {
 
     private HttpResponse(Builder builder) {
         this.status = builder.status;
-        this.headers = new HashMap<>(builder.headers);
+        this.headers = builder.headers == null ? new HashMap<>() : new HashMap<>(builder.headers);
         this.body = builder.body;
     }
 

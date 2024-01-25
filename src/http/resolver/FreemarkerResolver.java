@@ -7,6 +7,8 @@ import http.config.HttpConfig;
 import http.freemarker.FreemarkerConfig;
 import http.messages.HttpRequest;
 import http.messages.HttpResponse;
+import http.messages.HttpStatus;
+import http.util.HttpUtils;
 
 import java.io.*;
 import java.util.HashMap;
@@ -54,9 +56,19 @@ public class FreemarkerResolver implements Resolver {
         Writer outputStreamWriter = new OutputStreamWriter(outPut);
 
         processTemplate(template, outputStreamWriter);
-        byte[] string = outPut.toByteArray();
+        byte[] body = outPut.toByteArray();
 
-        return string;
+        String contentType = HttpUtils.determineContentType(path);
+        Map<String, String> headers = HttpUtils.makeHeader(body.length, contentType);
+
+        // 응답 헤더 설정
+        HttpResponse httpResponse = new HttpResponse.Builder()
+                .setStatus(HttpStatus.OK)
+                .setHeaders(headers)
+                .setBody(body)
+                .build();
+
+        return httpResponse.getHttpResponseBytes();
     }
 
     private void processTemplate(Template template, Writer outputStreamWriter) {

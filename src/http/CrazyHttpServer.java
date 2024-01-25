@@ -1,23 +1,16 @@
 package http;
 
-import http.resolver.ResolverMaster;
 import http.server.HttpServer;
-import http.servlet.DefaultServlet;
-import org.yaml.snakeyaml.Loader;
 import org.yaml.snakeyaml.Yaml;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
-public class Main {
+public class CrazyHttpServer {
 
     private static String logo =
             "  ___  ____    __    ____  _  _    _   _  ____  ____  ____    ___  ____  ____  _  _  ____  ____ \n" +

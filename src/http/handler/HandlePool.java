@@ -1,9 +1,8 @@
 package http.handler;
 
 import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
 
+@Deprecated
 public class HandlePool implements Runnable{
 
 
@@ -18,6 +17,5 @@ public class HandlePool implements Runnable{
 
         Handler attachment = (Handler) key.attachment();
         attachment.handle();
-
     }
 }
