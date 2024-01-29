@@ -18,14 +18,12 @@ import static http.handler.HandlerState.SENDING;
 public class Worker implements Runnable {
 
     private SocketChannel client;
-    private SelectionKey selectionKey;
     private final ResolverMaster resolverMaster;
     private final Queue<ByteBuffer> bufferQueue;
     private int state;
 
-    public Worker(SocketChannel client, SelectionKey selectionKey, Queue<ByteBuffer> bufferQueue, int state) {
+    public Worker(SocketChannel client, Queue<ByteBuffer> bufferQueue, int state) {
         this.client = client;
-        this.selectionKey = selectionKey;
         this.bufferQueue = bufferQueue;
         this.resolverMaster = ResolverMaster.getInstance();
         this.state = state;

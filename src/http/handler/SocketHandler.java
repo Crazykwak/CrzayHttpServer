@@ -32,16 +32,13 @@ public class SocketHandler implements Handler{
     }
 
     @Override
-    public synchronized void handle() {
+    public void handle() {
         try {
             synchronized (client) {
                 if (state == READING) {
-                    read();
-                    return;
-                }
-
-                if (state == SENDING) {
-                    send();
+                    executeWorkerAndTurnMod(READING, SENDING);
+                } else if (state == SENDING) {
+                    executeWorkerAndTurnMod(SENDING, READING);
                 }
             }
         } catch (IOException e) {
@@ -49,23 +46,23 @@ public class SocketHandler implements Handler{
         }
     }
 
-    private void send() throws IOException {
-        workerPool.execute(new Worker(client, selectionKey, bufferQueue, SENDING));
-        turnReadMod();
+    private void executeWorkerAndTurnMod(int currentState, int nextState) throws IOException {
+        workerPool.execute(new Worker(client, bufferQueue, currentState));
+        turnMod(nextState);
     }
 
-    private void turnReadMod() {
+    private void turnMod(int newState) {
         if (!selectionKey.isValid()) {
-            // key is cancelled. do nothing
             return;
         }
-        selectionKey.interestOps(SelectionKey.OP_READ);
-        state = READING;
-    }
 
-    private void read() throws IOException {
-        workerPool.execute(new Worker(client, selectionKey, bufferQueue, READING));
-        turnWriteMod();
+        if (newState == READING) {
+            selectionKey.interestOps(SelectionKey.OP_READ);
+        } else if (newState == SENDING) {
+            selectionKey.interestOps(SelectionKey.OP_WRITE);
+        }
+
+        state = newState;
     }
 
     private void turnWriteMod() {
