@@ -14,6 +14,7 @@ public class HttpConfig {
     private static HttpConfig httpConfig;
     private String rootPath;
     private List<String> freemarkerExtensionList;
+    private long keepAliveTimeOut = 1000L;
 
     private HttpConfig(String rootPath) {
         this.rootPath = rootPath;
@@ -75,5 +76,9 @@ public class HttpConfig {
             httpConfig = new HttpConfig("./webapp");
         }
         return httpConfig;
+    }
+
+    public long getKeepAliveTimeOut() {
+        return keepAliveTimeOut;
     }
 }

@@ -20,7 +20,6 @@ public class SocketHandler implements Handler{
     private SocketChannel client;
     private SelectionKey selectionKey;
     private int state = READING;
-    private final Queue<ByteBuffer> bufferQueue = new ConcurrentLinkedQueue<>();
     private final ExecutorService workerPool = Executors.newFixedThreadPool(Configuration.WORKER_SIZE);
 
     public SocketHandler(Selector selector, SocketChannel socketChannel) throws IOException {
@@ -33,45 +32,15 @@ public class SocketHandler implements Handler{
 
     @Override
     public void handle() {
-        try {
-            synchronized (client) {
-                if (state == READING) {
-                    executeWorkerAndTurnMod(READING, SENDING);
-                } else if (state == SENDING) {
-                    executeWorkerAndTurnMod(SENDING, READING);
-                }
+        synchronized (client) {
+            if (!client.isOpen()) {
+                return;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            executeWorker();
         }
     }
 
-    private void executeWorkerAndTurnMod(int currentState, int nextState) throws IOException {
-        workerPool.execute(new Worker(client, bufferQueue, currentState));
-        turnMod(nextState);
-    }
-
-    private void turnMod(int newState) {
-        if (!selectionKey.isValid()) {
-            return;
-        }
-
-        if (newState == READING) {
-            selectionKey.interestOps(SelectionKey.OP_READ);
-        } else if (newState == SENDING) {
-            selectionKey.interestOps(SelectionKey.OP_WRITE);
-        }
-
-        state = newState;
-    }
-
-    private void turnWriteMod() {
-        if (!selectionKey.isValid()) {
-            // key is cancelled. do nothing
-            return;
-        }
-
-        selectionKey.interestOps(SelectionKey.OP_WRITE);
-        state = SENDING;
+    private void executeWorker() {
+        workerPool.execute(new Worker(client));
     }
 }

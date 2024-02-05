@@ -1,6 +1,7 @@
 package http.handler;
 
 import http.config.Configuration;
+import http.config.HttpConfig;
 import http.messages.HttpRequest;
 import http.resolver.Resolver;
 import http.resolver.ResolverMaster;
@@ -19,61 +20,46 @@ public class Worker implements Runnable {
 
     private SocketChannel client;
     private final ResolverMaster resolverMaster;
-    private final Queue<ByteBuffer> bufferQueue;
-    private int state;
+    private final ByteBuffer byteBuffer = ByteBuffer.allocate(Configuration.BUFFER_SIZE);
 
-    public Worker(SocketChannel client, Queue<ByteBuffer> bufferQueue, int state) {
+    public Worker(SocketChannel client) {
         this.client = client;
-        this.bufferQueue = bufferQueue;
         this.resolverMaster = ResolverMaster.getInstance();
-        this.state = state;
     }
 
     @Override
     public void run() {
-
-        try {
-            synchronized (client) {
-                if (state == READING) {
-
-                    read();
-
-                    return;
-                }
-
-                if (state == SENDING) {
-                    send();
-                }
+        synchronized (client) {
+            read();
+            try {
+                send();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-
-
     }
 
     private void read() {
-        ByteBuffer readBuffer = ByteBuffer.allocate(Configuration.BUFFER_SIZE);
-        HttpRequest httpRequest = getHttpRequest(readBuffer);
-        readBuffer.clear();
+        HttpRequest httpRequest = getHttpRequest(byteBuffer);
+        byteBuffer.clear();
         if (httpRequest == null) {
             return;
         }
         byte[] responseByte = handleHttpRequest(httpRequest);
-        readBuffer.put(responseByte);
-        bufferQueue.add(readBuffer);
+        byteBuffer.put(responseByte);
+
+
     }
 
     private void send() throws IOException {
-        ByteBuffer writeBuffer = bufferQueue.poll();
-        if (writeBuffer == null) {
+        if (byteBuffer == null) {
             return;
         }
-        writeBuffer.flip();
-        while (writeBuffer.hasRemaining()) {
-            client.write(writeBuffer);
+        byteBuffer.flip();
+        while (byteBuffer.hasRemaining()) {
+            client.write(byteBuffer);
         }
-        writeBuffer.clear();
+        byteBuffer.clear();
     }
 
     private HttpRequest getHttpRequest(ByteBuffer readBuffer) {

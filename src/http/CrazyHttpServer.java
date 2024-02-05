@@ -1,10 +1,12 @@
 package http;
 
 import http.server.HttpServer;
+import http.test.TestUnit;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,32 @@ public class CrazyHttpServer {
 
         HttpServer httpServer = new HttpServer();
         httpServer.start();
+
+        TestUnit[] threads = new TestUnit[200];
+
+        try {
+            for (int i = 0; i < 200; i++) {
+                TestUnit test = new TestUnit("http://localhost:8080/index.ftl", "thread" + i);
+                threads[i] = test;
+                test.start();
+            }
+
+            for (TestUnit thread : threads) {
+                thread.join();
+            }
+
+            int count = 0;
+            for (TestUnit thread : threads) {
+                count += thread.getSuccessResult();
+            }
+
+            System.out.println("success Count = " + count / 100);
+
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         printLog();
 

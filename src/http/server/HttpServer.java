@@ -2,6 +2,7 @@ package http.server;
 
 import http.handler.AcceptHandler;
 import http.handler.Handler;
+import http.monitor.TimeoutMonitor;
 import http.servlet.DefaultServlet;
 import http.util.HttpUtils;
 
@@ -10,13 +11,16 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.channels.*;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HttpServer extends Thread{
 
     private Selector selector;
     private ServerSocketChannel serverSocketChannel;
     private ServerSocket serverSocket;
+    private Map<SelectionKey, Long> timeoutMap = new ConcurrentHashMap<>();
     private HttpServlet httpServlet;
 
     public HttpServer(int port, HttpServlet httpServlet) {
@@ -26,13 +30,16 @@ public class HttpServer extends Thread{
             this.serverSocket = serverSocketChannel.socket();
             InetSocketAddress inetSocketAddress = new InetSocketAddress(port);
             serverSocketChannel.socket().setSoTimeout(10000);
-            serverSocket.bind(inetSocketAddress);
+            serverSocket.bind(inetSocketAddress, 200);
             this.serverSocketChannel.configureBlocking(false);
 
             SelectionKey serverKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             serverKey.attach(new AcceptHandler(selector, serverSocketChannel));
 
             this.httpServlet = httpServlet;
+
+            Thread timeoutMonitor = new TimeoutMonitor(timeoutMap, serverSocketChannel);
+            timeoutMonitor.start();
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -49,16 +56,16 @@ public class HttpServer extends Thread{
 
         while (true) {
             try {
-                int select = selector.select();
+                int select = selector.select(100);
 
                 if (select < 0) {
                     System.out.println("no select. continue");
                     continue;
                 }
-
                 Set<SelectionKey> selectionKeys = selector.selectedKeys();
                 for (SelectionKey selectionKey : selectionKeys) {
                     dispatch(selectionKey);
+                    addTimeoutMap(selectionKey);
                 }
                 selectionKeys.clear();
 
@@ -71,6 +78,11 @@ public class HttpServer extends Thread{
         }
 
     }
+
+    private void addTimeoutMap(SelectionKey selectionKey) {
+        this.timeoutMap.put(selectionKey, System.currentTimeMillis());
+    }
+
 
     private void dispatch(SelectionKey key) {
 
