@@ -18,8 +18,6 @@ import static http.handler.HandlerState.SENDING;
 public class SocketHandler implements Handler{
 
     private SocketChannel client;
-    private SelectionKey selectionKey;
-    private int state = READING;
     private final ExecutorService workerPool = Executors.newFixedThreadPool(Configuration.WORKER_SIZE);
 
     public SocketHandler(Selector selector, SocketChannel socketChannel) throws IOException {
@@ -27,7 +25,7 @@ public class SocketHandler implements Handler{
         this.client.configureBlocking(false);
 
         socketChannel.socket().setTcpNoDelay(true);
-        this.selectionKey = socketChannel.register(selector, SelectionKey.OP_READ, this);
+        socketChannel.register(selector, SelectionKey.OP_READ, this);
     }
 
     @Override
