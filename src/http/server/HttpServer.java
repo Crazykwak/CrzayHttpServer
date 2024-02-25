@@ -56,7 +56,7 @@ public class HttpServer extends Thread{
 
         while (true) {
             try {
-                int select = selector.select(100);
+                int select = selector.select();
 
                 if (select < 0) {
                     System.out.println("no select. continue");
